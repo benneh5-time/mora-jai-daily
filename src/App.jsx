@@ -171,7 +171,7 @@ ${moveCount} moves (Optimal: ${puzzle.solution.length})
 
 ${emojiGrid}
 
-Solution: ${movesStr}
+Solution: ||${movesStr}||
 
 Play at: ${window.location.href}`;
 
