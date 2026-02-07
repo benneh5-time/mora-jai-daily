@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #1a1a2e;
+  min-height: 100vh;
+}
+
+.tile-button {
+  @apply relative aspect-square rounded-lg transition-all duration-150 border-2 border-transparent;
+}
+
+.tile-button:hover:not(:disabled) {
+  @apply scale-105 shadow-lg;
+}
+
+.tile-button:disabled {
+  @apply cursor-not-allowed opacity-60;
+}
+
+.corner-match {
+  @apply ring-4 ring-green-500 ring-offset-2 ring-offset-slate-900;
+}
+
+.corner-no-match {
+  @apply ring-2 ring-gray-600 ring-offset-1 ring-offset-slate-900;
+}
+
+/* Animations */
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.animate-pop {
+  animation: pop 0.2s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-shake {
+  animation: shake 0.3s ease-in-out;
+}
+
+@keyframes celebrate {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  50% { transform: scale(1.1) rotate(5deg); }
+  75% { transform: scale(1.1) rotate(-5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.animate-celebrate {
+  animation: celebrate 0.5s ease-in-out;
+}
