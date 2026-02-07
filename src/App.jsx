@@ -134,7 +134,7 @@ const RulesModal = ({ onClose }) => {
         </div>
         
         <p className="text-gray-400 text-xs text-center mb-4">
-          Based on puzzle boxes from The Blue Prince
+          Based on puzzle boxes from Blue Prince
         </p>
         
         <button
