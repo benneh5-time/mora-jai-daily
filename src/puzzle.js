@@ -263,14 +263,17 @@ export const getDailyPuzzle = () => {
   
   // Difficulty progression
   let difficulty;
-  if (puzzleNum % 7 === 0) {
-    difficulty = 'expert';
-  } else if (puzzleNum % 7 === 6) {
-    difficulty = 'hard';
-  } else if (puzzleNum % 3 === 0) {
-    difficulty = 'medium';
+  const today = new Date();
+  const dayOfWeek = today.getUTCDay();
+
+  if (dayOfWeek === 0) {
+    difficulty = 'expert';    // Sunday
+  } else if (dayOfWeek === 6) {
+    difficulty = 'hard';      // Saturday
+  } else if (dayOfWeek === 3 || dayOfWeek === 5) {
+    difficulty = 'medium';    // Wednesday & Friday
   } else {
-    difficulty = 'easy';
+    difficulty = 'easy';      // Mon, Tue, Thu
   }
   
   const difficultySettings = {
