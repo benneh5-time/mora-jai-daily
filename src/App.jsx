@@ -166,8 +166,9 @@ const ShareModal = ({ gameState, puzzle, onClose }) => {
     }).join('')
   ).join('\n');
   
+  const resetText = gameState.resetCount > 0 ? ` (${gameState.resetCount} reset${gameState.resetCount > 1 ? 's' : ''})` : '';
   const shareText = `Mora Jai Daily #${puzzle.puzzleNumber} ${isPerfect ? '⭐' : '✅'}
-${moveCount} moves (Optimal: ${puzzle.solution.length})
+  ${moveCount} moves${resetText} (Optimal: ${puzzle.solution.length})
 
 ${emojiGrid}
 
@@ -220,6 +221,8 @@ Play at: ${window.location.href}`;
   );
 };
 
+const [resetCount, setResetCount] = useState(0);
+
 // Countdown timer
 const Countdown = () => {
   const [timeLeft, setTimeLeft] = useState(getTimeUntilNextPuzzle());
@@ -267,6 +270,7 @@ export default function App() {
       setMoveCount(savedState.moveCount);
       setMoveSequence(savedState.moveSequence);
       setSolved(savedState.solved);
+      setResetCount(savedState.resetCount || 0);
     } else {
       setGrid(cloneGrid(dailyPuzzle.grid));
     }
@@ -281,6 +285,7 @@ export default function App() {
         moveCount,
         moveSequence,
         solved,
+        resetCount,
       });
     }
   }, [puzzle, grid, moveCount, moveSequence, solved]);
@@ -330,6 +335,7 @@ export default function App() {
       setMoveCount(0);
       setMoveSequence([]);
       setSolved(false);
+      setResetCount(prev => prev +1);
     }
   };
   
@@ -444,9 +450,14 @@ export default function App() {
       <div className="flex gap-3 mb-6">
         <button
           onClick={handleReset}
-          className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-semibold"
+          disabled={resetCount >= 4}
+          className={`px-6 py-2 rounded-lg font-semibold ${
+            resetCount >= 4 
+              ? 'bg-slate-800 text-gray-500 cursor-not-allowed' 
+              : 'bg-slate-700 hover:bg-slate-600 text-white'
+          }`}
         >
-          ↺ Reset
+          ↺ Reset ({4 - resetCount} left)
         </button>
         {solved && (
           <button
@@ -466,7 +477,7 @@ export default function App() {
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
       {showShare && solved && (
         <ShareModal 
-          gameState={{ moveCount, moveSequence, solved }} 
+          gameState={{ moveCount, moveSequence, solved, resetCount }} 
           puzzle={puzzle}
           onClose={() => setShowShare(false)} 
         />
