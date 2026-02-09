@@ -134,7 +134,7 @@ const RulesModal = ({ onClose }) => {
         </div>
         
         <p className="text-gray-400 text-xs text-center mb-4">
-          Based on puzzle boxes from Blue Prince
+          Based on puzzle boxes from The Blue Prince
         </p>
         
         <button
@@ -150,7 +150,7 @@ const RulesModal = ({ onClose }) => {
 
 // Share result modal
 const ShareModal = ({ gameState, puzzle, onClose }) => {
-  const { moveCount, moveSequence, solved } = gameState;
+  const { moveCount, moveSequence, solved, resetCount } = gameState;
   const isPerfect = solved && moveCount === puzzle.solution.length;
   
   const movesStr = moveSequence.map(m => posToTileNum(m.row, m.col)).join('-');
@@ -166,13 +166,13 @@ const ShareModal = ({ gameState, puzzle, onClose }) => {
     }).join('')
   ).join('\n');
   
-  const resetText = gameState.resetCount > 0 ? ` (${gameState.resetCount} reset${gameState.resetCount > 1 ? 's' : ''})` : '';
+  const resetText = resetCount > 0 ? ` (${resetCount} reset${resetCount > 1 ? 's' : ''})` : '';
   const shareText = `Mora Jai Daily #${puzzle.puzzleNumber} ${isPerfect ? '⭐' : '✅'}
-  ${moveCount} moves${resetText} (Optimal: ${puzzle.solution.length})
+${moveCount} moves${resetText} (Optimal: ${puzzle.solution.length})
 
 ${emojiGrid}
 
-Solution: ${movesStr}
+Solution: ||${movesStr}||
 
 Play at: ${window.location.href}`;
 
@@ -221,8 +221,6 @@ Play at: ${window.location.href}`;
   );
 };
 
-const [resetCount, setResetCount] = useState(0);
-
 // Countdown timer
 const Countdown = () => {
   const [timeLeft, setTimeLeft] = useState(getTimeUntilNextPuzzle());
@@ -252,6 +250,7 @@ export default function App() {
   const [moveCount, setMoveCount] = useState(0);
   const [moveSequence, setMoveSequence] = useState([]);
   const [solved, setSolved] = useState(false);
+  const [resetCount, setResetCount] = useState(0);
   const [animatingTile, setAnimatingTile] = useState(null);
   const [stats, setStats] = useState(loadStats());
   const [showStats, setShowStats] = useState(false);
@@ -288,7 +287,7 @@ export default function App() {
         resetCount,
       });
     }
-  }, [puzzle, grid, moveCount, moveSequence, solved]);
+  }, [puzzle, grid, moveCount, moveSequence, solved, resetCount]);
   
   // Handle tile click
   const handleTileClick = useCallback((row, col) => {
@@ -330,12 +329,12 @@ export default function App() {
   
   // Handle reset
   const handleReset = () => {
-    if (puzzle) {
+    if (puzzle && resetCount < 4) {
       setGrid(cloneGrid(puzzle.grid));
       setMoveCount(0);
       setMoveSequence([]);
       setSolved(false);
-      setResetCount(prev => prev +1);
+      setResetCount(prev => prev + 1);
     }
   };
   
