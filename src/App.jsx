@@ -171,7 +171,7 @@ ${moveCount} moves (Optimal: ${puzzle.solution.length})
 
 ${emojiGrid}
 
-Solution: ||${movesStr}||
+Solution: ${movesStr}
 
 Play at: ${window.location.href}`;
 
@@ -359,13 +359,22 @@ export default function App() {
           <h1 className="text-2xl font-bold text-white">Mora Jai Daily</h1>
           <div className="text-sm text-gray-400">#{puzzle.puzzleNumber} • {puzzle.difficulty}</div>
         </div>
-        <button 
-          onClick={() => setShowStats(true)}
-          className="text-2xl hover:scale-110 transition-transform"
-          title="Statistics"
-        >
-          📊
-        </button>
+        <div className="flex gap-2">
+          <a 
+            href="/practice"
+            className="text-2xl hover:scale-110 transition-transform"
+            title="Practice Mode"
+          >
+            🎮
+          </a>
+          <button 
+            onClick={() => setShowStats(true)}
+            className="text-2xl hover:scale-110 transition-transform"
+            title="Statistics"
+          >
+            📊
+          </button>
+        </div>
       </div>
       
       {/* Target */}
