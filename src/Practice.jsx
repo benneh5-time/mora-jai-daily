@@ -72,6 +72,45 @@ const ColorPicker = ({ selectedColor, onSelect }) => {
   );
 };
 
+// Pick N distinct items from pool using Math.random
+const pickDistinctRandom = (pool, count) => {
+  if (pool.length < count) return pool.slice(0, count);
+  const result = [];
+  while (result.length < count) {
+    const candidate = pool[Math.floor(Math.random() * pool.length)];
+    if (!result.includes(candidate)) result.push(candidate);
+  }
+  return result;
+};
+
+// Mini 3x3 target indicator: corners show target colors, non-corners are dark placeholders
+const TargetMiniGrid = ({ targetCorners }) => {
+  const cornerMap = {
+    '0-0': targetCorners.topLeft,   '0-2': targetCorners.topRight,
+    '2-0': targetCorners.bottomLeft, '2-2': targetCorners.bottomRight,
+  };
+  return (
+    <div className="grid grid-cols-3 gap-1" style={{ width: '72px' }}>
+      {[0, 1, 2].map(row =>
+        [0, 1, 2].map(col => {
+          const key = `${row}-${col}`;
+          return (
+            <div
+              key={key}
+              className="rounded-sm"
+              style={{
+                width: '20px',
+                height: '20px',
+                backgroundColor: cornerMap[key] ? COLORS[cornerMap[key]].hex : '#374151',
+              }}
+            />
+          );
+        })
+      )}
+    </div>
+  );
+};
+
 // Generate random puzzle
 const generatePuzzle = (difficulty) => {
   const difficultySettings = {
@@ -86,20 +125,30 @@ const generatePuzzle = (difficulty) => {
   const nonGray = colors.filter(c => c !== 'gray');
   
   for (let attempt = 0; attempt < 200; attempt++) {
-    const targetColor = nonGray[Math.floor(Math.random() * nonGray.length)];
-    const targetCorners = {
-      topLeft: targetColor,
-      topRight: targetColor,
-      bottomLeft: targetColor,
-      bottomRight: targetColor,
-    };
-    
+    let targetCorners;
+    if (difficulty === 'easy') {
+      const color = nonGray[Math.floor(Math.random() * nonGray.length)];
+      targetCorners = { topLeft: color, topRight: color, bottomLeft: color, bottomRight: color };
+    } else if (difficulty === 'medium') {
+      const [a, b] = pickDistinctRandom(nonGray, 2);
+      const split = Math.random() < 0.5 ? 'topBottom' : 'leftRight';
+      targetCorners = split === 'topBottom'
+        ? { topLeft: a, topRight: a, bottomLeft: b, bottomRight: b }
+        : { topLeft: a, topRight: b, bottomLeft: a, bottomRight: b };
+    } else if (difficulty === 'hard') {
+      const [a, b] = pickDistinctRandom(nonGray, 2);
+      targetCorners = { topLeft: a, topRight: b, bottomLeft: b, bottomRight: a };
+    } else {
+      const [a, b, c, d] = pickDistinctRandom(nonGray, 4);
+      targetCorners = { topLeft: a, topRight: b, bottomLeft: c, bottomRight: d };
+    }
+
     const randomTile = () => colors[Math.floor(Math.random() * colors.length)];
-    
+
     let grid = [
-      [targetColor, randomTile(), targetColor],
-      [randomTile(), randomTile(), randomTile()],
-      [targetColor, randomTile(), targetColor],
+      [targetCorners.topLeft,    randomTile(), targetCorners.topRight],
+      [randomTile(),             randomTile(), randomTile()],
+      [targetCorners.bottomLeft, randomTile(), targetCorners.bottomRight],
     ];
     
     const scrambleMoves = settings.scrambleMoves + Math.floor(Math.random() * 8);
@@ -268,7 +317,9 @@ export default function Practice() {
   
   // For create mode
   const [selectedColor, setSelectedColor] = useState('blue');
-  const [targetColor, setTargetColor] = useState('blue');
+  const [createTargetCorners, setCreateTargetCorners] = useState({
+    topLeft: 'blue', topRight: 'blue', bottomLeft: 'blue', bottomRight: 'blue',
+  });
   const [editGrid, setEditGrid] = useState([
     ['gray', 'gray', 'gray'],
     ['gray', 'gray', 'gray'],
@@ -342,13 +393,8 @@ export default function Practice() {
   
   // Start playing custom puzzle
   const handlePlayCustom = () => {
-    const targetCorners = {
-      topLeft: targetColor,
-      topRight: targetColor,
-      bottomLeft: targetColor,
-      bottomRight: targetColor,
-    };
-    
+    const targetCorners = createTargetCorners;
+
     const solution = findSolution(editGrid, targetCorners, 20);
     
     if (isSolved(editGrid, targetCorners)) {
@@ -381,9 +427,7 @@ export default function Practice() {
   };
   
   const currentGrid = mode === 'create' ? editGrid : grid;
-  const targetCorners = mode === 'create' 
-    ? { topLeft: targetColor, topRight: targetColor, bottomLeft: targetColor, bottomRight: targetColor }
-    : puzzle?.targetCorners;
+  const targetCorners = mode === 'create' ? createTargetCorners : puzzle?.targetCorners;
   
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-6">
@@ -459,18 +503,38 @@ export default function Practice() {
             <ColorPicker selectedColor={selectedColor} onSelect={setSelectedColor} />
           </div>
           
-          {/* Target color selector */}
+          {/* Target corner selector */}
           <div className="mb-4">
-            <div className="text-gray-400 text-xs mb-1 text-center">Target corner color</div>
-            <div className="flex justify-center gap-2">
-              {['white', 'yellow', 'purple', 'green', 'pink', 'orange', 'black', 'red', 'blue'].map(color => (
-                <button
-                  key={color}
-                  onClick={() => setTargetColor(color)}
-                  className={`w-8 h-8 rounded border-2 ${targetColor === color ? 'border-white scale-110' : 'border-transparent'}`}
-                  style={{ backgroundColor: COLORS[color].hex }}
-                />
-              ))}
+            <div className="text-gray-400 text-xs mb-2 text-center">Target corner colors — click to cycle</div>
+            <div className="flex flex-col items-center gap-1">
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { key: 'topLeft', label: 'TL' },
+                  { key: 'topRight', label: 'TR' },
+                  { key: 'bottomLeft', label: 'BL' },
+                  { key: 'bottomRight', label: 'BR' },
+                ].map(({ key, label }) => {
+                  const allColors = ['white', 'yellow', 'purple', 'green', 'pink', 'orange', 'black', 'red', 'blue'];
+                  const currentIdx = allColors.indexOf(createTargetCorners[key]);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        const nextIdx = (currentIdx + 1) % allColors.length;
+                        setCreateTargetCorners(prev => ({ ...prev, [key]: allColors[nextIdx] }));
+                      }}
+                      className="rounded-lg border-2 border-white/30 hover:border-white/70 transition-colors flex items-center justify-center"
+                      style={{ width: '56px', height: '56px', backgroundColor: COLORS[createTargetCorners[key]].hex }}
+                      title={`${label}: ${COLORS[createTargetCorners[key]].name} — click to change`}
+                    >
+                      <span className="text-xs font-bold opacity-70" style={{ color: COLORS[createTargetCorners[key]].textColor }}>
+                        {label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="text-gray-500 text-xs mt-1">Click a corner to cycle colors</div>
             </div>
           </div>
         </>
@@ -478,15 +542,9 @@ export default function Practice() {
       
       {/* Target display */}
       {targetCorners && (
-        <div className="mb-4 text-center">
-          <div className="text-gray-400 text-sm mb-1">Target: All corners</div>
-          <div className="flex items-center justify-center gap-2">
-            <div 
-              className="w-8 h-8 rounded"
-              style={{ backgroundColor: COLORS[targetCorners.topLeft].hex }}
-            />
-            <span className="text-white font-semibold">{COLORS[targetCorners.topLeft].name}</span>
-          </div>
+        <div className="mb-4 flex flex-col items-center gap-1">
+          <div className="text-gray-400 text-xs">Target corners</div>
+          <TargetMiniGrid targetCorners={targetCorners} />
         </div>
       )}
       
@@ -589,12 +647,7 @@ export default function Practice() {
             </button>
             <button
               onClick={() => {
-                const targetCorners = {
-                  topLeft: targetColor,
-                  topRight: targetColor,
-                  bottomLeft: targetColor,
-                  bottomRight: targetColor,
-                };
+                const targetCorners = createTargetCorners;
                 const solution = findSolution(editGrid, targetCorners, 20);
                 setPuzzle({ grid: editGrid, targetCorners, solution });
                 setInitialGrid(cloneGrid(editGrid));

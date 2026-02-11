@@ -256,6 +256,17 @@ export const getTimeUntilNextPuzzle = () => {
   return tomorrow.getTime() - now.getTime();
 };
 
+// Pick N distinct items from pool using a provided random function
+const pickDistinct = (pool, count, randomFn) => {
+  if (pool.length < count) return pool.slice(0, count);
+  const result = [];
+  while (result.length < count) {
+    const candidate = pool[Math.floor(randomFn() * pool.length)];
+    if (!result.includes(candidate)) result.push(candidate);
+  }
+  return result;
+};
+
 // Generate daily puzzle based on date
 export const getDailyPuzzle = () => {
   const puzzleNum = getPuzzleNumber();
@@ -292,20 +303,30 @@ export const getDailyPuzzle = () => {
   
   // Generate puzzle deterministically
   for (let attempt = 0; attempt < 200; attempt++) {
-    const targetColor = nonGray[Math.floor(random() * nonGray.length)];
-    const targetCorners = {
-      topLeft: targetColor,
-      topRight: targetColor,
-      bottomLeft: targetColor,
-      bottomRight: targetColor,
-    };
-    
+    let targetCorners;
+    if (difficulty === 'easy') {
+      const color = nonGray[Math.floor(random() * nonGray.length)];
+      targetCorners = { topLeft: color, topRight: color, bottomLeft: color, bottomRight: color };
+    } else if (difficulty === 'medium') {
+      const [a, b] = pickDistinct(nonGray, 2, random);
+      const split = random() < 0.5 ? 'topBottom' : 'leftRight';
+      targetCorners = split === 'topBottom'
+        ? { topLeft: a, topRight: a, bottomLeft: b, bottomRight: b }
+        : { topLeft: a, topRight: b, bottomLeft: a, bottomRight: b };
+    } else if (difficulty === 'hard') {
+      const [a, b] = pickDistinct(nonGray, 2, random);
+      targetCorners = { topLeft: a, topRight: b, bottomLeft: b, bottomRight: a };
+    } else {
+      const [a, b, c, d] = pickDistinct(nonGray, 4, random);
+      targetCorners = { topLeft: a, topRight: b, bottomLeft: c, bottomRight: d };
+    }
+
     const randomTile = () => colors[Math.floor(random() * colors.length)];
-    
+
     let grid = [
-      [targetColor, randomTile(), targetColor],
-      [randomTile(), randomTile(), randomTile()],
-      [targetColor, randomTile(), targetColor],
+      [targetCorners.topLeft,    randomTile(), targetCorners.topRight],
+      [randomTile(),             randomTile(), randomTile()],
+      [targetCorners.bottomLeft, randomTile(), targetCorners.bottomRight],
     ];
     
     const scrambleMoves = settings.scrambleMoves + Math.floor(random() * 8);

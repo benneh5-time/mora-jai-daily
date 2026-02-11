@@ -118,7 +118,7 @@ const RulesModal = ({ onClose }) => {
         <h2 className="text-2xl font-bold text-white text-center mb-4">How to Play</h2>
         
         <p className="text-gray-300 mb-4 text-center">
-          Get the target color in all four corners to solve the puzzle!
+          Get each corner to its target color to solve the puzzle!
         </p>
         
         <div className="space-y-2 mb-6">
@@ -217,6 +217,34 @@ Play at: ${window.location.href}`;
           Close
         </button>
       </div>
+    </div>
+  );
+};
+
+// Mini 3x3 target indicator: corners show target colors, non-corners are dark placeholders
+const TargetMiniGrid = ({ targetCorners }) => {
+  const cornerMap = {
+    '0-0': targetCorners.topLeft,   '0-2': targetCorners.topRight,
+    '2-0': targetCorners.bottomLeft, '2-2': targetCorners.bottomRight,
+  };
+  return (
+    <div className="grid grid-cols-3 gap-1" style={{ width: '72px' }}>
+      {[0, 1, 2].map(row =>
+        [0, 1, 2].map(col => {
+          const key = `${row}-${col}`;
+          return (
+            <div
+              key={key}
+              className="rounded-sm"
+              style={{
+                width: '20px',
+                height: '20px',
+                backgroundColor: cornerMap[key] ? COLORS[cornerMap[key]].hex : '#374151',
+              }}
+            />
+          );
+        })
+      )}
     </div>
   );
 };
@@ -346,9 +374,6 @@ export default function App() {
     );
   }
   
-  const targetColor = puzzle.targetCorners.topLeft;
-  const targetColorData = COLORS[targetColor];
-  
   return (
     <div className="min-h-screen flex flex-col items-center px-4 py-6">
       {/* Header */}
@@ -383,15 +408,9 @@ export default function App() {
       </div>
       
       {/* Target */}
-      <div className="mb-4 text-center">
-        <div className="text-gray-400 text-sm mb-1">Target: All corners</div>
-        <div className="flex items-center justify-center gap-2">
-          <div 
-            className="w-8 h-8 rounded"
-            style={{ backgroundColor: targetColorData.hex }}
-          />
-          <span className="text-white font-semibold">{targetColorData.name}</span>
-        </div>
+      <div className="mb-4 flex flex-col items-center gap-1">
+        <div className="text-gray-400 text-xs">Target corners</div>
+        <TargetMiniGrid targetCorners={puzzle.targetCorners} />
       </div>
       
       {/* Board */}
