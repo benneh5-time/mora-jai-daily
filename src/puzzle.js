@@ -272,23 +272,22 @@ export const getDailyPuzzle = () => {
   const puzzleNum = getPuzzleNumber();
   const seed = puzzleNum * 12345;
   
-  // Difficulty progression
+  // Difficulty by day of week: Mon-Fri = medium, Sat = hard, Sun = expert
+  const dayOfWeek = new Date().getUTCDay(); // 0=Sunday, 6=Saturday
   let difficulty;
-  if (puzzleNum % 7 === 0) {
+  if (dayOfWeek === 0) {
     difficulty = 'expert';
-  } else if (puzzleNum % 7 === 6) {
+  } else if (dayOfWeek === 6) {
     difficulty = 'hard';
-  } else if (puzzleNum % 3 === 0) {
-    difficulty = 'medium';
   } else {
-    difficulty = 'easy';
+    difficulty = 'medium';
   }
-  
+
   const difficultySettings = {
-    easy: { minMoves: 3, maxMoves: 5, scrambleMoves: 8, colors: ['gray', 'white', 'yellow', 'pink', 'blue'] },
-    medium: { minMoves: 5, maxMoves: 8, scrambleMoves: 12, colors: ['gray', 'white', 'yellow', 'purple', 'pink', 'green', 'blue'] },
-    hard: { minMoves: 7, maxMoves: 11, scrambleMoves: 16, colors: ['gray', 'white', 'yellow', 'purple', 'pink', 'green', 'orange', 'blue'] },
-    expert: { minMoves: 9, maxMoves: 14, scrambleMoves: 20, colors: ['gray', 'white', 'yellow', 'purple', 'pink', 'green', 'orange', 'black', 'red', 'blue'] },
+    easy:   { minMoves: 5,  maxMoves: 5,  scrambleMoves: 8,  colors: ['gray', 'white', 'yellow', 'pink', 'blue'] },
+    medium: { minMoves: 6,  maxMoves: 7,  scrambleMoves: 12, colors: ['gray', 'white', 'yellow', 'purple', 'pink', 'green', 'blue'] },
+    hard:   { minMoves: 8,  maxMoves: 10, scrambleMoves: 18, colors: ['gray', 'white', 'yellow', 'purple', 'pink', 'green', 'orange', 'blue'] },
+    expert: { minMoves: 11, maxMoves: 14, scrambleMoves: 24, colors: ['gray', 'white', 'yellow', 'purple', 'pink', 'green', 'orange', 'black', 'red', 'blue'] },
   };
   
   const settings = difficultySettings[difficulty];
@@ -303,17 +302,19 @@ export const getDailyPuzzle = () => {
   
   // Generate puzzle deterministically
   for (let attempt = 0; attempt < 200; attempt++) {
+    // Random corner pattern, independent of difficulty
+    const patternIdx = Math.floor(random() * 5);
     let targetCorners;
-    if (difficulty === 'easy') {
-      const color = nonGray[Math.floor(random() * nonGray.length)];
-      targetCorners = { topLeft: color, topRight: color, bottomLeft: color, bottomRight: color };
-    } else if (difficulty === 'medium') {
+    if (patternIdx === 0) {
+      const a = nonGray[Math.floor(random() * nonGray.length)];
+      targetCorners = { topLeft: a, topRight: a, bottomLeft: a, bottomRight: a };
+    } else if (patternIdx === 1) {
       const [a, b] = pickDistinct(nonGray, 2, random);
-      const split = random() < 0.5 ? 'topBottom' : 'leftRight';
-      targetCorners = split === 'topBottom'
-        ? { topLeft: a, topRight: a, bottomLeft: b, bottomRight: b }
-        : { topLeft: a, topRight: b, bottomLeft: a, bottomRight: b };
-    } else if (difficulty === 'hard') {
+      targetCorners = { topLeft: a, topRight: a, bottomLeft: b, bottomRight: b };
+    } else if (patternIdx === 2) {
+      const [a, b] = pickDistinct(nonGray, 2, random);
+      targetCorners = { topLeft: a, topRight: b, bottomLeft: a, bottomRight: b };
+    } else if (patternIdx === 3) {
       const [a, b] = pickDistinct(nonGray, 2, random);
       targetCorners = { topLeft: a, topRight: b, bottomLeft: b, bottomRight: a };
     } else {

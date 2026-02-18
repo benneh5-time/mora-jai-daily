@@ -125,17 +125,19 @@ const generatePuzzle = (difficulty) => {
   const nonGray = colors.filter(c => c !== 'gray');
   
   for (let attempt = 0; attempt < 200; attempt++) {
+    // Random corner pattern, independent of difficulty
+    const patternIdx = Math.floor(Math.random() * 5);
     let targetCorners;
-    if (difficulty === 'easy') {
-      const color = nonGray[Math.floor(Math.random() * nonGray.length)];
-      targetCorners = { topLeft: color, topRight: color, bottomLeft: color, bottomRight: color };
-    } else if (difficulty === 'medium') {
+    if (patternIdx === 0) {
+      const a = nonGray[Math.floor(Math.random() * nonGray.length)];
+      targetCorners = { topLeft: a, topRight: a, bottomLeft: a, bottomRight: a };
+    } else if (patternIdx === 1) {
       const [a, b] = pickDistinctRandom(nonGray, 2);
-      const split = Math.random() < 0.5 ? 'topBottom' : 'leftRight';
-      targetCorners = split === 'topBottom'
-        ? { topLeft: a, topRight: a, bottomLeft: b, bottomRight: b }
-        : { topLeft: a, topRight: b, bottomLeft: a, bottomRight: b };
-    } else if (difficulty === 'hard') {
+      targetCorners = { topLeft: a, topRight: a, bottomLeft: b, bottomRight: b };
+    } else if (patternIdx === 2) {
+      const [a, b] = pickDistinctRandom(nonGray, 2);
+      targetCorners = { topLeft: a, topRight: b, bottomLeft: a, bottomRight: b };
+    } else if (patternIdx === 3) {
       const [a, b] = pickDistinctRandom(nonGray, 2);
       targetCorners = { topLeft: a, topRight: b, bottomLeft: b, bottomRight: a };
     } else {
